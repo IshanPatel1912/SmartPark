@@ -15,8 +15,8 @@ public class FeedbackDAO {
 
     public void addFeedback(Feedback feedback) throws SQLException {
         String query = "INSERT INTO feedback (customer_id, rating, comments, created_at) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, feedback.getCustomerId());
             stmt.setInt(2, feedback.getRating());
             stmt.setString(3, feedback.getComments());
@@ -28,8 +28,8 @@ public class FeedbackDAO {
     public List<Feedback> getAllFeedback() throws SQLException {
         List<Feedback> feedbackList = new ArrayList<>();
         String query = "SELECT * FROM feedback ORDER BY created_at DESC";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 feedbackList.add(new Feedback(

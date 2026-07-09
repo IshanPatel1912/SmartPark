@@ -25,6 +25,7 @@ public class SmartParkApp {
     private static ParkingSessionService sessionService;
     private static ReportService reportService;
     private static SalaryService salaryService;
+    private static FeedbackService feedbackService;
     private static SignUpCLI signUpCLI;
     private static SetupWizard setupWizard;
 
@@ -56,7 +57,7 @@ public class SmartParkApp {
             int choice = getIntInput();
             switch (choice) {
                 case 1: handleLogin(); break;
-                case 2: signUpCLI.showSignUpMenu(); break;
+                case 2: signUpCLI.showSignUpMenu(false); break;
                 case 3: running = false; System.out.println("Shutting down SmartPark System. Goodbye!"); break;
                 default: System.out.println("Invalid option. Please try again.");
             }
@@ -77,6 +78,7 @@ public class SmartParkApp {
         sessionService = new ParkingSessionService(slotService, billService);
         reportService = new ReportService();
         salaryService = new SalaryService();
+        feedbackService = new FeedbackService();
         signUpCLI = new SignUpCLI(customerService, employeeService, scanner);
         setupWizard = new SetupWizard(floorService, slotService, pricingService, scanner);
     }
@@ -105,9 +107,6 @@ public class SmartParkApp {
         }
     }
 
-    // ==========================================
-    //            ADMIN DASHBOARD
-    // ==========================================
     private static void adminMenu(int userId) {
         boolean active = true;
         while (active) {
@@ -118,7 +117,8 @@ public class SmartParkApp {
             System.out.println("4. Remove Employee");
             System.out.println("5. Disburse Salary");
             System.out.println("6. View Salary Report (Monthly)");
-            System.out.println("7. Logout");
+            System.out.println("7. View Customer Feedback");
+            System.out.println("8. Logout");
             System.out.print("Select: ");
             
             int choice = getIntInput();
@@ -132,7 +132,7 @@ public class SmartParkApp {
                         }
                         break;
                     case 2:
-                        signUpCLI.showSignUpMenu(); // Re-use the existing sign up logic
+                        signUpCLI.showSignUpMenu(true); 
                         break;
                     case 3:
                         System.out.print("Enter Employee ID to update: ");
@@ -186,6 +186,9 @@ public class SmartParkApp {
                         System.out.println("Total Salary Paid: ₹" + total);
                         break;
                     case 7:
+                        feedbackService.printAggregateFeedback();
+                        break;
+                    case 8:
                         authService.logout(userId);
                         active = false;
                         break;
@@ -197,9 +200,6 @@ public class SmartParkApp {
         }
     }
 
-    // ==========================================
-    //            MANAGER DASHBOARD
-    // ==========================================
     private static void managerMenu(int userId) {
         boolean active = true;
         while (active) {
@@ -210,7 +210,8 @@ public class SmartParkApp {
             System.out.println("4. Generate Daily Revenue Report");
             System.out.println("5. Update Vehicle Pricing");
             System.out.println("6. Add Extra Slots to a Floor");
-            System.out.println("7. Logout");
+            System.out.println("7. View Customer Feedback");
+            System.out.println("8. Logout");
             System.out.print("Select: ");
             
             int choice = getIntInput();
@@ -249,6 +250,9 @@ public class SmartParkApp {
                         slotService.addExtraSlotsToFloor(fId, fNum, vType, nSlots);
                         break;
                     case 7:
+                        feedbackService.printAggregateFeedback();
+                        break;
+                    case 8:
                         authService.logout(userId);
                         active = false;
                         break;
@@ -260,9 +264,6 @@ public class SmartParkApp {
         }
     }
 
-    // ==========================================
-    //          SECURITY GUARD DASHBOARD
-    // ==========================================
     private static void securityMenu(int userId) {
         boolean active = true;
         while (active) {
@@ -336,9 +337,6 @@ public class SmartParkApp {
         }
     }
 
-    // ==========================================
-    //         PARKING OPERATOR DASHBOARD
-    // ==========================================
     private static void operatorMenu(int userId) {
         boolean active = true;
         while (active) {
@@ -353,8 +351,10 @@ public class SmartParkApp {
                 case 1:
                     System.out.print("Enter Bill ID to process payment: ");
                     try {
-                        billService.processPayment(getIntInput());
+                        int billId = getIntInput();
+                        billService.processPayment(billId);
                         System.out.println("Payment processed successfully.");
+                        billService.printReceipt(billId);
                     } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
                     break;
                 case 2:
@@ -373,9 +373,6 @@ public class SmartParkApp {
         }
     }
 
-    // ==========================================
-    //             CUSTOMER DASHBOARD
-    // ==========================================
     private static void customerMenu(int userId) {
         boolean active = true;
         while (active) {
@@ -383,7 +380,8 @@ public class SmartParkApp {
             System.out.println("1. Register Vehicle");
             System.out.println("2. View Available Slots");
             System.out.println("3. Reserve a Parking Slot");
-            System.out.println("4. Logout");
+            System.out.println("4. Submit Feedback");
+            System.out.println("5. Logout");
             System.out.print("Select: ");
             
             int choice = getIntInput();
@@ -424,7 +422,6 @@ public class SmartParkApp {
                         System.out.print("Enter the Vehicle ID you want to park: ");
                         int vId = getIntInput();
                         
-                        // Find selected vehicle
                         Vehicle selectedVehicle = null;
                         for (Vehicle v : myVehicles) {
                             if (v.getId() == vId) selectedVehicle = v;
@@ -438,7 +435,6 @@ public class SmartParkApp {
                         System.out.print("How many hours do you want to reserve the slot for? ");
                         int duration = getIntInput();
 
-                        // Smart Reservation Allocation
                         ParkingSlot slot = slotService.getNearestAvailableSlot(selectedVehicle.getVehicleType());
                         if (slot == null) {
                             System.out.println("Sorry, no available slots for " + selectedVehicle.getVehicleType() + " at the moment.");
@@ -454,6 +450,18 @@ public class SmartParkApp {
                     }
                     break;
                 case 4:
+                    System.out.print("Rate your experience (1-5): ");
+                    int rating = getIntInput();
+                    System.out.print("Leave a comment (optional): ");
+                    String comments = scanner.nextLine();
+                    try {
+                        feedbackService.submitFeedback(userId, rating, comments);
+                        System.out.println("Thank you for your feedback!");
+                    } catch (Exception e) {
+                        System.out.println("Error submitting feedback: " + e.getMessage());
+                    }
+                    break;
+                case 5:
                     authService.logout(userId);
                     active = false;
                     break;
@@ -462,9 +470,6 @@ public class SmartParkApp {
         }
     }
 
-    // ==========================================
-    //               UTILITIES
-    // ==========================================
     private static int getIntInput() {
         try { return Integer.parseInt(scanner.nextLine()); } catch (NumberFormatException e) { return -1; }
     }

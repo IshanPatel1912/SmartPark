@@ -14,18 +14,13 @@ public class UserDAO {
 
     public User authenticate(String username, String password) throws InvalidLoginException, SQLException {
         String query = "SELECT * FROM users WHERE username = ? AND password = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, username);
             stmt.setString(2, password);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new User(
-                            rs.getInt("id"),
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            rs.getString("role")
-                    );
+                    return new User(rs.getInt("id"), rs.getString("username"), rs.getString("password"), rs.getString("role"));
                 } else {
                     throw new InvalidLoginException("Invalid username or password.");
                 }
@@ -35,17 +30,14 @@ public class UserDAO {
 
     public int registerUser(User user) throws SQLException {
         String query = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, user.getUsername());
             stmt.setString(2, user.getPassword());
             stmt.setString(3, user.getRole());
             stmt.executeUpdate();
-
             try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+                if (rs.next()) return rs.getInt(1);
             }
         }
         return -1;

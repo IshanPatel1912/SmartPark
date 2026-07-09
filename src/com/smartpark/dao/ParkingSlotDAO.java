@@ -59,6 +59,25 @@ public class ParkingSlotDAO {
         return slots;
     }
 
+    public List<ParkingSlot> getSlotsByFloorAndType(int floorId, String slotType) throws SQLException {
+        List<ParkingSlot> slots = new ArrayList<>();
+        String query = "SELECT * FROM parking_slots WHERE floor_id = ? AND slot_type = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, floorId);
+            stmt.setString(2, slotType);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    slots.add(new ParkingSlot(
+                            rs.getInt("id"), rs.getInt("floor_id"),
+                            rs.getString("slot_number"), rs.getString("slot_type"), rs.getString("status")
+                    ));
+                }
+            }
+        }
+        return slots;
+    }
+
     public ParkingSlot getSlotById(int id) throws SQLException {
         String query = "SELECT * FROM parking_slots WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();

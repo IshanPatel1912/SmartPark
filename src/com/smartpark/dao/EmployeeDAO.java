@@ -1,10 +1,6 @@
 package com.smartpark.dao;
 
-import com.smartpark.models.Admin;
-import com.smartpark.models.Employee;
-import com.smartpark.models.Manager;
-import com.smartpark.models.ParkingOperator;
-import com.smartpark.models.SecurityGuard;
+import com.smartpark.models.*;
 import com.smartpark.utils.DBConnection;
 import com.smartpark.exceptions.DuplicateEntityException;
 
@@ -20,8 +16,8 @@ public class EmployeeDAO {
 
     public void addEmployee(Employee employee) throws DuplicateEntityException, SQLException {
         String query = "INSERT INTO employees (user_id, name, contact_number, employee_type, shift, salary) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, employee.getUserId());
             stmt.setString(2, employee.getName());
             stmt.setString(3, employee.getContactNumber());
@@ -36,13 +32,11 @@ public class EmployeeDAO {
 
     public Employee getEmployeeByUserId(int userId) throws SQLException {
         String query = "SELECT * FROM employees WHERE user_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return mapResultSetToEmployee(rs);
-                }
+                if (rs.next()) return mapResultSetToEmployee(rs);
             }
         }
         return null;
@@ -51,20 +45,18 @@ public class EmployeeDAO {
     public List<Employee> getAllEmployees() throws SQLException {
         List<Employee> employees = new ArrayList<>();
         String query = "SELECT * FROM employees";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query);
              ResultSet rs = stmt.executeQuery()) {
-            while (rs.next()) {
-                employees.add(mapResultSetToEmployee(rs));
-            }
+            while (rs.next()) employees.add(mapResultSetToEmployee(rs));
         }
         return employees;
     }
 
     public void updateEmployee(Employee employee) throws SQLException {
         String query = "UPDATE employees SET name = ?, contact_number = ?, shift = ?, salary = ? WHERE user_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, employee.getName());
             stmt.setString(2, employee.getContactNumber());
             stmt.setString(3, employee.getShift());
@@ -75,9 +67,9 @@ public class EmployeeDAO {
     }
 
     public void deleteEmployee(int userId) throws SQLException {
-        String query = "DELETE FROM users WHERE id = ?"; // Cascade delete will remove from employees table
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        String query = "DELETE FROM users WHERE id = ?"; 
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, userId);
             stmt.executeUpdate();
         }

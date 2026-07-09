@@ -2,7 +2,12 @@ package com.smartpark.main;
 
 import com.smartpark.services.CustomerService;
 import com.smartpark.services.EmployeeService;
+import com.smartpark.utils.DBConnection;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 public class SignUpCLI {
@@ -17,7 +22,8 @@ public class SignUpCLI {
         this.scanner = scanner;
     }
 
-    public void showSignUpMenu() {
+    // AUDIT FIX: Accept a parameter to determine context
+    public void showSignUpMenu(boolean isAdminLoggedIn) {
         System.out.println("\n=================================");
         System.out.println("       SMARTPARK REGISTRATION    ");
         System.out.println("=================================");
@@ -32,7 +38,7 @@ public class SignUpCLI {
                 registerCustomer();
                 break;
             case 2:
-                registerEmployee();
+                registerEmployee(isAdminLoggedIn);
                 break;
             case 3:
                 return;
@@ -62,16 +68,20 @@ public class SignUpCLI {
         }
     }
 
-    private void registerEmployee() {
-        System.out.println("\n--- Employee Registration ---");
-        System.out.print("Admin Code required to register: ");
-        String adminCode = scanner.nextLine();
+    private void registerEmployee(boolean isAdminLoggedIn) {
+        // AUDIT FIX: First-Admin Bootstrap (Remove Hardcoded Secret)
+        boolean isFirstAdmin = checkIsFirstAdmin();
         
-        if (!"ADMIN123".equals(adminCode)) {
-            System.out.println("Invalid Admin Code. Registration denied.");
+        if (!isAdminLoggedIn && !isFirstAdmin) {
+            System.out.println("Registration Denied: Only a logged-in Admin can register new employees.");
             return;
         }
 
+        if (isFirstAdmin && !isAdminLoggedIn) {
+            System.out.println("\n[SYSTEM BOOTSTRAP] No Admins found. You are registering the FIRST Admin account.");
+        }
+
+        System.out.println("\n--- Employee Registration ---");
         System.out.print("Username: ");
         String username = scanner.nextLine();
         System.out.print("Password: ");
@@ -93,6 +103,20 @@ public class SignUpCLI {
         } catch (Exception e) {
             System.out.println("Registration failed: " + e.getMessage());
         }
+    }
+
+    private boolean checkIsFirstAdmin() {
+        String query = "SELECT COUNT(*) FROM employees WHERE employee_type = 'Admin'";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1) == 0;
+            }
+        } catch (SQLException e) {
+            System.out.println("Database error during admin check: " + e.getMessage());
+        }
+        return false;
     }
 
     private int getIntInput() {

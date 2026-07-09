@@ -4,12 +4,8 @@ import com.smartpark.dao.EmployeeDAO;
 import com.smartpark.dao.UserDAO;
 import com.smartpark.exceptions.DuplicateEntityException;
 import com.smartpark.exceptions.SystemException;
-import com.smartpark.models.Admin;
-import com.smartpark.models.Employee;
-import com.smartpark.models.Manager;
-import com.smartpark.models.ParkingOperator;
-import com.smartpark.models.SecurityGuard;
-import com.smartpark.models.User;
+import com.smartpark.models.*;
+import com.smartpark.utils.DBConnection;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -25,23 +21,32 @@ public class EmployeeService {
     }
 
     public void registerEmployee(String username, String password, String role, String name, String contactNumber, String shift, double salary) throws DuplicateEntityException, SQLException, SystemException {
-        User newUser = new User(0, username, password, role);
-        int userId = userDAO.registerUser(newUser);
-        
-        if (userId > 0) {
-            Employee employee;
-            if ("Manager".equalsIgnoreCase(role)) {
-                employee = new Manager(userId, name, contactNumber, shift, salary);
-            } else if ("Security Guard".equalsIgnoreCase(role)) {
-                employee = new SecurityGuard(userId, name, contactNumber, shift, salary);
-            } else if ("Admin".equalsIgnoreCase(role)) {
-                employee = new Admin(userId, name, contactNumber, shift, salary);
+        try {
+            DBConnection.beginTransaction(); // Start Atomic Transaction
+            
+            User newUser = new User(0, username, password, role);
+            int userId = userDAO.registerUser(newUser);
+            
+            if (userId > 0) {
+                Employee employee;
+                if ("Manager".equalsIgnoreCase(role)) {
+                    employee = new Manager(userId, name, contactNumber, shift, salary);
+                } else if ("Security Guard".equalsIgnoreCase(role)) {
+                    employee = new SecurityGuard(userId, name, contactNumber, shift, salary);
+                } else if ("Admin".equalsIgnoreCase(role)) {
+                    employee = new Admin(userId, name, contactNumber, shift, salary);
+                } else {
+                    employee = new ParkingOperator(userId, name, contactNumber, shift, salary);
+                }
+                employeeDAO.addEmployee(employee);
+                DBConnection.commitTransaction(); // Save changes permanently
             } else {
-                employee = new ParkingOperator(userId, name, contactNumber, shift, salary);
+                DBConnection.rollbackTransaction();
+                throw new SystemException("Failed to register employee system user.");
             }
-            employeeDAO.addEmployee(employee);
-        } else {
-            throw new SystemException("Failed to register employee system user.");
+        } catch (Exception e) {
+            DBConnection.rollbackTransaction(); // Undo all if error occurs
+            throw e; 
         }
     }
 

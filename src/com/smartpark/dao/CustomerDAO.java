@@ -14,8 +14,8 @@ public class CustomerDAO {
 
     public void addCustomer(Customer customer) throws DuplicateEntityException, SQLException {
         String query = "INSERT INTO customers (user_id, name, contact_number, email) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, customer.getUserId());
             stmt.setString(2, customer.getName());
             stmt.setString(3, customer.getContactNumber());
@@ -28,17 +28,12 @@ public class CustomerDAO {
 
     public Customer getCustomerByUserId(int userId) throws SQLException {
         String query = "SELECT * FROM customers WHERE user_id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, userId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return new Customer(
-                            rs.getInt("user_id"),
-                            rs.getString("name"),
-                            rs.getString("contact_number"),
-                            rs.getString("email")
-                    );
+                    return new Customer(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("email"));
                 }
             }
         }

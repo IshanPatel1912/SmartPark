@@ -13,8 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Stack;
@@ -52,62 +52,89 @@ public class ParkingSessionService {
         Integer vehicleId = entryQueue.poll();
         if (vehicleId == null) return null;
 
-        int assignedSlotId;
-
-        if (reservationId > 0) {
-            Reservation res = reservationDAO.getReservationById(reservationId);
+        try {
+            DBConnection.beginTransaction(); // Start Atomic Transaction
             
-            if (res == null || !"ACTIVE".equalsIgnoreCase(res.getStatus())) {
-                throw new SlotOccupiedException("Invalid or Expired Reservation ID.");
+            if (sessionDAO.getActiveSessionByVehicleId(vehicleId) != null) {
+                throw new SlotOccupiedException("Vehicle is already parked inside the system!");
             }
-            if (res.getVehicleId() != vehicleId) {
-                throw new SlotOccupiedException("Vehicle mismatch! This reservation belongs to another vehicle.");
-            }
-            
-            assignedSlotId = res.getSlotId();
-            reservationDAO.updateReservationStatus(reservationId, "USED");
 
-        } else {
-            String vehicleType = getVehicleTypeById(vehicleId);
-            ParkingSlot nearestSlot = slotService.getNearestAvailableSlot(vehicleType);
+            int assignedSlotId;
 
-            if (nearestSlot == null) {
-                throw new SlotOccupiedException("Parking is FULL for vehicle type: " + vehicleType);
+            if (reservationId > 0) {
+                Reservation res = reservationDAO.getReservationById(reservationId);
+                if (res == null || !"ACTIVE".equalsIgnoreCase(res.getStatus())) {
+                    throw new SlotOccupiedException("Invalid or previously used Reservation ID.");
+                }
+                if (LocalDateTime.now().isAfter(res.getExpiryTime())) {
+                    reservationDAO.updateReservationStatus(reservationId, "EXPIRED");
+                    throw new SlotOccupiedException("This reservation has expired.");
+                }
+                if (res.getVehicleId() != vehicleId) {
+                    throw new SlotOccupiedException("Vehicle mismatch! This reservation belongs to another vehicle.");
+                }
+                assignedSlotId = res.getSlotId();
+                reservationDAO.updateReservationStatus(reservationId, "USED");
+            } else {
+                String vehicleType = getVehicleTypeById(vehicleId);
+                ParkingSlot nearestSlot = slotService.getNearestAvailableSlot(vehicleType);
+                if (nearestSlot == null) {
+                    throw new SlotOccupiedException("Parking is FULL for vehicle type: " + vehicleType);
+                }
+                assignedSlotId = nearestSlot.getId();
             }
-            assignedSlotId = nearestSlot.getId();
+
+            ParkingSession session = new ParkingSession(0, reservationId, vehicleId, assignedSlotId, LocalDateTime.now(), null, "ACTIVE");
+            int sessionId = sessionDAO.createSession(session);
+
+            if (sessionId > 0) {
+                slotService.updateSlotStatus(assignedSlotId, "OCCUPIED");
+                session.setId(sessionId);
+                DBConnection.commitTransaction(); // Commit Session + Slot Status + Reservation Updates
+                return session;
+            }
+            DBConnection.rollbackTransaction();
+            return null;
+        } catch (Exception e) {
+            DBConnection.rollbackTransaction();
+            throw e;
         }
-
-        ParkingSession session = new ParkingSession(0, reservationId, vehicleId, assignedSlotId, LocalDateTime.now(), null, "ACTIVE");
-        int sessionId = sessionDAO.createSession(session);
-
-        if (sessionId > 0) {
-            slotService.updateSlotStatus(assignedSlotId, "OCCUPIED");
-            session.setId(sessionId);
-            return session;
-        }
-        return null;
     }
 
     public Bill processNextExit() throws SQLException {
         Integer vehicleId = exitQueue.poll();
         if (vehicleId == null) return null;
 
-        ParkingSession session = sessionDAO.getActiveSessionByVehicleId(vehicleId);
-        if (session == null) return null;
+        try {
+            DBConnection.beginTransaction(); // Start Atomic Transaction
+            
+            ParkingSession session = sessionDAO.getActiveSessionByVehicleId(vehicleId);
+            if (session == null) {
+                DBConnection.rollbackTransaction();
+                return null;
+            }
 
-        LocalDateTime exitTime = LocalDateTime.now();
-        sessionDAO.updateExitDetails(session.getId(), exitTime, "COMPLETED");
-        slotService.updateSlotStatus(session.getSlotId(), "AVAILABLE");
-        
-        session.setExitTime(exitTime);
-        session.setStatus("COMPLETED");
-        recentSessions.push(session);
+            LocalDateTime exitTime = LocalDateTime.now();
+            sessionDAO.updateExitDetails(session.getId(), exitTime, "COMPLETED");
+            slotService.updateSlotStatus(session.getSlotId(), "AVAILABLE");
+            
+            session.setExitTime(exitTime);
+            session.setStatus("COMPLETED");
+            recentSessions.push(session);
 
-        long hoursParked = ChronoUnit.HOURS.between(session.getEntryTime(), exitTime);
-        if (hoursParked == 0) hoursParked = 1;
+            long minutesParked = Duration.between(session.getEntryTime(), exitTime).toMinutes();
+            long hoursParked = (long) Math.ceil(minutesParked / 60.0);
+            if (hoursParked == 0) hoursParked = 1;
 
-        String vehicleType = getVehicleTypeById(vehicleId);
-        return billService.generateBill(session.getId(), vehicleType, hoursParked);
+            String vehicleType = getVehicleTypeById(vehicleId);
+            Bill bill = billService.generateBill(session.getId(), vehicleType, hoursParked);
+            
+            DBConnection.commitTransaction(); // Commit Exit details + Bill generation
+            return bill;
+        } catch (Exception e) {
+            DBConnection.rollbackTransaction();
+            throw e;
+        }
     }
 
     public ParkingSession undoLastExit() throws SQLException {

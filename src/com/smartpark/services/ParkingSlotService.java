@@ -58,12 +58,10 @@ public class ParkingSlotService {
     }
 
     public void addExtraSlotsToFloor(int floorId, int floorNumber, String type, int numberOfNewSlots) throws SQLException {
-       
         int currentMax = 0;
-        List<ParkingSlot> allSlots = parkingSlotDAO.getAvailableSlots(type); 
+        List<ParkingSlot> allSlots = parkingSlotDAO.getSlotsByFloorAndType(floorId, type); 
         for (ParkingSlot slot : allSlots) {
-            if (slot.getFloorId() == floorId && slot.getSlotNumber().startsWith("F" + floorNumber + "-" + type.charAt(0))) {
-                
+            if (slot.getSlotNumber().startsWith("F" + floorNumber + "-" + type.charAt(0))) {
                 String numPart = slot.getSlotNumber().substring(slot.getSlotNumber().indexOf(type.charAt(0)) + 1);
                 try {
                     int num = Integer.parseInt(numPart);
@@ -72,9 +70,7 @@ public class ParkingSlotService {
             }
         }
         
-        
         createSlots(floorId, floorNumber, type, numberOfNewSlots, currentMax + 1);
         System.out.println("Successfully added " + numberOfNewSlots + " " + type + " slots to Floor " + floorNumber + ".");
     }
-
 }
