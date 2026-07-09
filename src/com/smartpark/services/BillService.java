@@ -2,6 +2,7 @@ package com.smartpark.services;
 
 import com.smartpark.dao.BillDAO;
 import com.smartpark.models.Bill;
+import com.smartpark.interfaces.Payment;
 import com.smartpark.models.ParkingSession;
 import com.smartpark.models.Pricing;
 import com.smartpark.models.Receipt;
@@ -14,7 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 
-public class BillService {
+public class BillService implements Payment {
 
     private BillDAO billDAO;
     private PricingService pricingService;
@@ -49,6 +50,7 @@ public class BillService {
         return bill;
     }
 
+    @Override
     public void processPayment(int billId) throws SQLException {
         billDAO.updatePaymentStatus(billId, "PAID");
     }

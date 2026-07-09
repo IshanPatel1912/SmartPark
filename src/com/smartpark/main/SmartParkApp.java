@@ -109,7 +109,7 @@ public class SmartParkApp {
 
     private static void adminMenu(int userId) {
         boolean active = true;
-        while (active) {
+        while (active && authService.isUserLoggedIn(userId)) {
             System.out.println("\n--- Admin Dashboard ---");
             System.out.println("1. View All Employees");
             System.out.println("2. Add New Employee");
@@ -207,7 +207,7 @@ public class SmartParkApp {
 
     private static void managerMenu(int userId) {
         boolean active = true;
-        while (active) {
+        while (active && authService.isUserLoggedIn(userId)) {
             System.out.println("\n--- Manager Dashboard ---");
             System.out.println("1. View Live System Capacity");
             System.out.println("2. View Currently Parked Vehicles");
@@ -272,7 +272,7 @@ public class SmartParkApp {
 
     private static void securityMenu(int userId) {
         boolean active = true;
-        while (active) {
+        while (active && authService.isUserLoggedIn(userId)) {
             System.out.println("\n--- Security Guard Dashboard ---");
             System.out.println("1. Scan License Plate for Entry (Add to Queue)");
             System.out.println("2. Process Next Entry (Auto-Allocate Nearest Slot)");
@@ -345,7 +345,7 @@ public class SmartParkApp {
 
     private static void operatorMenu(int userId) {
         boolean active = true;
-        while (active) {
+        while (active && authService.isUserLoggedIn(userId)) {
             System.out.println("\n--- Parking Operator Dashboard ---");
             System.out.println("1. Process Payment");
             System.out.println("2. Undo Last Exit Operation");
@@ -381,13 +381,15 @@ public class SmartParkApp {
 
     private static void customerMenu(int userId) {
         boolean active = true;
-        while (active) {
+        while (active && authService.isUserLoggedIn(userId)) {
             System.out.println("\n--- Customer Dashboard ---");
             System.out.println("1. Register Vehicle");
             System.out.println("2. View Available Slots");
             System.out.println("3. Reserve a Parking Slot");
             System.out.println("4. Submit Feedback");
-            System.out.println("5. Logout");
+            System.out.println("5. View My Profile");             // NEW: Wires in CustomerService.getCustomerDetails()
+            System.out.println("6. View My Parking History");     // NEW: Wires in ReportService.getCustomerParkingHistory()
+            System.out.println("7. Logout");
             System.out.print("Select: ");
             
             int choice = getIntInput();
@@ -467,7 +469,38 @@ public class SmartParkApp {
                         System.out.println("Error submitting feedback: " + e.getMessage());
                     }
                     break;
+                // NEW FEATURE: View Profile
                 case 5:
+                    try {
+                        Customer customer = customerService.getCustomerDetails(userId);
+                        if (customer != null) {
+                            System.out.println("\n--- My Profile ---");
+                            System.out.println("Name: " + customer.getName());
+                            System.out.println("Contact: " + customer.getContactNumber());
+                            System.out.println("Email: " + customer.getEmail());
+                        } else {
+                            System.out.println("Profile details not found.");
+                        }
+                    } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
+                    break;
+                // NEW FEATURE: View Parking History
+                case 6:
+                    try {
+                        List<ParkingSession> history = reportService.getCustomerParkingHistory(userId);
+                        if (history.isEmpty()) {
+                            System.out.println("You have no parking history on record.");
+                        } else {
+                            System.out.println("\n--- My Parking History ---");
+                            for (ParkingSession ps : history) {
+                                String exitStr = (ps.getExitTime() != null) ? ps.getExitTime().toString() : "Currently Parked";
+                                System.out.println("Session ID: " + ps.getId() + " | Slot ID: " + ps.getSlotId() + 
+                                                   " | Entry: " + ps.getEntryTime() + " | Exit: " + exitStr + 
+                                                   " | Status: " + ps.getStatus());
+                            }
+                        }
+                    } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
+                    break;
+                case 7:
                     authService.logout(userId);
                     active = false;
                     break;
