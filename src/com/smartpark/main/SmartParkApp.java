@@ -134,7 +134,6 @@ public class SmartParkApp {
                     case 2:
                         signUpCLI.showSignUpMenu(true); 
                         break;
-                    // Inside adminMenu -> case 3:
                     case 3:
                         System.out.print("Enter Employee ID to update: ");
                         int empId = getIntInput();
@@ -152,7 +151,6 @@ public class SmartParkApp {
                         System.out.print("New Salary (Enter 0 to keep '₹" + emp.getSalary() + "'): ");
                         double nSal = getDoubleInput();
                         
-                        // FIX: Wrap nSal in BigDecimal.valueOf()
                         if (nSal > 0) emp.setSalary(java.math.BigDecimal.valueOf(nSal));
                         
                         employeeService.updateEmployee(emp);
@@ -168,7 +166,6 @@ public class SmartParkApp {
                         int pId = getIntInput();
                         System.out.print("Amount to disburse: ₹");
                         double pAmt = getDoubleInput();
-                        // FIX: Convert double to BigDecimal
                         salaryService.payEmployee(pId, java.math.BigDecimal.valueOf(pAmt), LocalDate.now());
                         System.out.println("Salary of ₹" + pAmt + " disbursed successfully.");
                         break;
@@ -181,7 +178,6 @@ public class SmartParkApp {
                         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
                         
                         List<SalaryDisbursement> salaries = salaryService.getSalaryReport(start, end);
-                        // FIX: Use BigDecimal for Math
                         java.math.BigDecimal total = java.math.BigDecimal.ZERO;
                         System.out.println("\n--- Salary Report (" + start.getMonth() + " " + yr + ") ---");
                         for (SalaryDisbursement s : salaries) {
@@ -240,7 +236,6 @@ public class SmartParkApp {
                         double base = getDoubleInput();
                         System.out.print("New Hourly Rate: ₹");
                         double hourly = getDoubleInput();
-                        // FIX: Convert double to BigDecimal
                         pricingService.setPricing(type, java.math.BigDecimal.valueOf(base), java.math.BigDecimal.valueOf(hourly));
                         System.out.println("Pricing updated successfully!");
                         break;
@@ -387,8 +382,8 @@ public class SmartParkApp {
             System.out.println("2. View Available Slots");
             System.out.println("3. Reserve a Parking Slot");
             System.out.println("4. Submit Feedback");
-            System.out.println("5. View My Profile");             // NEW: Wires in CustomerService.getCustomerDetails()
-            System.out.println("6. View My Parking History");     // NEW: Wires in ReportService.getCustomerParkingHistory()
+            System.out.println("5. View My Profile");             
+            System.out.println("6. View My Parking History");     
             System.out.println("7. Logout");
             System.out.print("Select: ");
             
@@ -469,7 +464,6 @@ public class SmartParkApp {
                         System.out.println("Error submitting feedback: " + e.getMessage());
                     }
                     break;
-                // NEW FEATURE: View Profile
                 case 5:
                     try {
                         Customer customer = customerService.getCustomerDetails(userId);
@@ -483,7 +477,6 @@ public class SmartParkApp {
                         }
                     } catch (Exception e) { System.out.println("Error: " + e.getMessage()); }
                     break;
-                // NEW FEATURE: View Parking History
                 case 6:
                     try {
                         List<ParkingSession> history = reportService.getCustomerParkingHistory(userId);

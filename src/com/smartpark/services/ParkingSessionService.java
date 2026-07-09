@@ -40,7 +40,6 @@ public class ParkingSessionService {
         this.recentSessions = new Stack<>();
     }
 
-    // BUG FIX #3: Guard against double-queuing
     public void addVehicleToEntryQueue(int vehicleId) {
         if (!entryQueue.contains(vehicleId)) {
             entryQueue.offer(vehicleId);
@@ -49,7 +48,6 @@ public class ParkingSessionService {
         }
     }
 
-    // BUG FIX #3: Guard against double-queuing
     public void addVehicleToExitQueue(int vehicleId) {
         if (!exitQueue.contains(vehicleId)) {
             exitQueue.offer(vehicleId);
@@ -63,7 +61,7 @@ public class ParkingSessionService {
         if (vehicleId == null) return null;
 
         try {
-            DBConnection.beginTransaction(); // Start Atomic Transaction
+            DBConnection.beginTransaction(); 
             
             if (sessionDAO.getActiveSessionByVehicleId(vehicleId) != null) {
                 throw new SlotOccupiedException("Vehicle is already parked inside the system!");
@@ -81,7 +79,7 @@ public class ParkingSessionService {
                     
                     // BUG FIX #1: Free up the slot forever locked by expired reservations
                     slotService.updateSlotStatus(res.getSlotId(), "AVAILABLE");
-                    DBConnection.commitTransaction(); // Save the status update immediately
+                    DBConnection.commitTransaction(); 
                     throw new SlotOccupiedException("This reservation has expired. Slot freed.");
                 }
                 if (res.getVehicleId() != vehicleId) {
@@ -104,7 +102,7 @@ public class ParkingSessionService {
             if (sessionId > 0) {
                 slotService.updateSlotStatus(assignedSlotId, "OCCUPIED");
                 session.setId(sessionId);
-                DBConnection.commitTransaction(); // Commit Session + Slot Status + Reservation Updates
+                DBConnection.commitTransaction(); 
                 return session;
             }
             DBConnection.rollbackTransaction();
@@ -163,8 +161,8 @@ public class ParkingSessionService {
 
     private String getVehicleTypeById(int vehicleId) throws SQLException {
         String query = "SELECT vehicle_type FROM vehicles WHERE id = ?";
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
+        Connection conn = DBConnection.getConnection(); // FIX: Outside try block
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, vehicleId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) return rs.getString("vehicle_type");

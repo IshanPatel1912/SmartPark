@@ -85,7 +85,6 @@ public class SignUpCLI {
         System.out.print("Password: ");
         String password = scanner.nextLine();
         
-        // BUG FIX #2: Force Role to Admin during bootstrap
         String role;
         if (isFirstAdmin && !isAdminLoggedIn) {
             role = "Admin";

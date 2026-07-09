@@ -21,10 +21,9 @@ public class EmployeeService {
         this.employeeDAO = new EmployeeDAO();
     }
 
-    // SIGNATURE UPDATED FOR BIGDECIMAL
     public void registerEmployee(String username, String password, String role, String name, String contactNumber, String shift, BigDecimal salary) throws DuplicateEntityException, SQLException, SystemException {
         try {
-            DBConnection.beginTransaction(); // Start Atomic Transaction
+            DBConnection.beginTransaction(); 
             
             User newUser = new User(0, username, password, role);
             int userId = userDAO.registerUser(newUser);
@@ -41,13 +40,13 @@ public class EmployeeService {
                     employee = new ParkingOperator(userId, name, contactNumber, shift, salary);
                 }
                 employeeDAO.addEmployee(employee);
-                DBConnection.commitTransaction(); // Save changes permanently
+                DBConnection.commitTransaction(); 
             } else {
                 DBConnection.rollbackTransaction();
                 throw new SystemException("Failed to register employee system user.");
             }
         } catch (Exception e) {
-            DBConnection.rollbackTransaction(); // Undo all if error occurs
+            DBConnection.rollbackTransaction();
             throw e; 
         }
     }

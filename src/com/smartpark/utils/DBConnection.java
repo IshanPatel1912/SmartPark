@@ -25,7 +25,6 @@ public class DBConnection {
         return connection;
     }
 
-    // NEW: Added getters for DatabaseInitializer
     public static String getDbUser() {
         return USER;
     }

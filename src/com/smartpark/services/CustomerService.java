@@ -22,7 +22,7 @@ public class CustomerService {
 
     public void registerCustomer(String username, String password, String name, String contactNumber, String email) throws DuplicateEntityException, SQLException, SystemException {
         try {
-            DBConnection.beginTransaction(); // Start Atomic Transaction
+            DBConnection.beginTransaction(); 
             
             User newUser = new User(0, username, password, "Customer");
             int userId = userDAO.registerUser(newUser);
@@ -30,13 +30,13 @@ public class CustomerService {
             if (userId > 0) {
                 Customer customer = new Customer(userId, name, contactNumber, email);
                 customerDAO.addCustomer(customer);
-                DBConnection.commitTransaction(); // Save changes permanently
+                DBConnection.commitTransaction(); 
             } else {
                 DBConnection.rollbackTransaction(); 
                 throw new SystemException("Failed to register customer system user.");
             }
         } catch (Exception e) {
-            DBConnection.rollbackTransaction(); // Undo all if error occurs
+            DBConnection.rollbackTransaction(); 
             throw e; 
         }
     }

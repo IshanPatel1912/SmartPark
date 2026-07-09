@@ -14,7 +14,6 @@ public class PricingService {
         this.pricingDAO = new PricingDAO();
     }
 
-    // SIGNATURE UPDATED FOR BIGDECIMAL
     public void setPricing(String vehicleType, BigDecimal baseRate, BigDecimal hourlyRate) throws SQLException {
         Pricing pricing = new Pricing(0, vehicleType, baseRate, hourlyRate);
         pricingDAO.addOrUpdatePricing(pricing);

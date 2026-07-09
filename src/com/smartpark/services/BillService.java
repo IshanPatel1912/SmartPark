@@ -32,7 +32,6 @@ public class BillService implements Payment {
             throw new SQLException("Pricing details not found for vehicle type: " + vehicleType + ". Please set up pricing first.");
         }
         
-        // BIGDECIMAL MATH FIXES
         BigDecimal amount = pricing.getBaseRate();
         if (hoursParked > 1) {
             BigDecimal extraHours = BigDecimal.valueOf(hoursParked - 1);
@@ -70,7 +69,6 @@ public class BillService implements Payment {
             stmt.setInt(1, billId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    // BIGDECIMAL FIX FOR RECEIPT GENERATION
                     Bill bill = new Bill(billId, rs.getInt("session_id"), rs.getBigDecimal("amount"), 
                                          rs.getString("payment_status"), rs.getTimestamp("billing_time").toLocalDateTime());
                     

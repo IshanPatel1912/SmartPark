@@ -16,7 +16,6 @@ public class SalaryService {
         this.salaryDAO = new SalaryDAO();
     }
 
-    // SIGNATURE UPDATED FOR BIGDECIMAL
     public void payEmployee(int employeeId, BigDecimal amount, LocalDate paymentDate) throws SQLException {
         salaryDAO.recordSalaryPayment(employeeId, amount, paymentDate);
     }

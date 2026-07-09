@@ -22,7 +22,7 @@ CREATE TABLE employees (
     contact_number VARCHAR(15) UNIQUE NOT NULL,
     employee_type VARCHAR(30) NOT NULL,
     shift VARCHAR(20),
-    salary DOUBLE,
+    salary Decimal(10,2),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -52,8 +52,8 @@ CREATE TABLE parking_slots (
 CREATE TABLE pricing (
     id INT AUTO_INCREMENT PRIMARY KEY,
     vehicle_type VARCHAR(20) UNIQUE NOT NULL,
-    base_rate DOUBLE NOT NULL,
-    hourly_rate DOUBLE NOT NULL
+    base_rate DECIMAL(10,2) NOT NULL,
+    hourly_rate DECIMAL(10,2) NOT NULL
 );
 
 CREATE TABLE reservations (
@@ -85,7 +85,7 @@ CREATE TABLE parking_sessions (
 CREATE TABLE bills (
     id INT AUTO_INCREMENT PRIMARY KEY,
     session_id INT NOT NULL,
-    amount DOUBLE NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
     payment_status VARCHAR(20) DEFAULT 'PENDING',
     billing_time DATETIME NOT NULL,
     FOREIGN KEY (session_id) REFERENCES parking_sessions(id)
@@ -103,7 +103,7 @@ CREATE TABLE feedback (
 CREATE TABLE salary_disbursements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     employee_id INT NOT NULL,
-    amount DOUBLE NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
     payment_date DATE NOT NULL,
     FOREIGN KEY (employee_id) REFERENCES employees(user_id) ON DELETE CASCADE
 );

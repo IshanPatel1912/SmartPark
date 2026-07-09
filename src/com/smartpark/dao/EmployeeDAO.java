@@ -23,7 +23,7 @@ public class EmployeeDAO {
             stmt.setString(3, employee.getContactNumber());
             stmt.setString(4, employee.getEmployeeType());
             stmt.setString(5, employee.getShift());
-            stmt.setBigDecimal(6, employee.getSalary()); // BIGDECIMAL
+            stmt.setBigDecimal(6, employee.getSalary()); 
             stmt.executeUpdate();
         } catch (SQLIntegrityConstraintViolationException e) {
             throw new DuplicateEntityException("Employee with this contact number already exists.");
@@ -60,7 +60,7 @@ public class EmployeeDAO {
             stmt.setString(1, employee.getName());
             stmt.setString(2, employee.getContactNumber());
             stmt.setString(3, employee.getShift());
-            stmt.setBigDecimal(4, employee.getSalary()); // BIGDECIMAL
+            stmt.setBigDecimal(4, employee.getSalary()); 
             stmt.setInt(5, employee.getUserId());
             stmt.executeUpdate();
         }

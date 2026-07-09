@@ -19,7 +19,6 @@ public class ReportService implements ReportGenerator<Bill> {
         this.reportDAO = new ReportDAO();
     }
 
-    // RESTORED: Customer Parking History
     public List<ParkingSession> getCustomerParkingHistory(int customerId) throws SQLException {
         return reportDAO.getParkingHistoryByCustomer(customerId);
     }
