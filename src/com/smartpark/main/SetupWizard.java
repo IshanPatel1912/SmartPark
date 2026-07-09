@@ -4,6 +4,7 @@ import com.smartpark.services.ParkingFloorService;
 import com.smartpark.services.ParkingSlotService;
 import com.smartpark.services.PricingService;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -22,18 +23,13 @@ public class SetupWizard {
     }
 
     public void start() {
-        System.out.println("\n*******************************************************");
-        System.out.println("   WELCOME TO THE SMARTPARK FIRST-TIME OWNER SETUP");
-        System.out.println("*******************************************************");
-        System.out.println("It looks like this is your first time running the system.");
-        System.out.println("Let's configure your parking layout and pricing.\n");
-
+        System.out.println("\n=== SMARTPARK FIRST-TIME SETUP WIZARD ===");
         try {
             setupFloorsAndSlots();
             setupPricing();
-            System.out.println("\n[SUCCESS] Setup Wizard complete! You are ready to go.\n");
+            System.out.println("\n>>> Setup Complete! System is ready. <<<");
         } catch (Exception e) {
-            System.out.println("\n[ERROR] Setup failed: " + e.getMessage());
+            System.out.println("Setup failed: " + e.getMessage());
         }
     }
 
@@ -71,7 +67,7 @@ public class SetupWizard {
             double base = getDoubleInput();
             System.out.print("  Hourly Rate: ₹");
             double hourly = getDoubleInput();
-            pricingService.setPricing(type, base, hourly);
+            pricingService.setPricing(type, BigDecimal.valueOf(base), BigDecimal.valueOf(hourly));
         }
     }
 

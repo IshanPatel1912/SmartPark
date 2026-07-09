@@ -17,7 +17,7 @@ public class BillDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, bill.getSessionId());
-            stmt.setDouble(2, bill.getAmount());
+            stmt.setBigDecimal(2, bill.getAmount()); // BIGDECIMAL
             stmt.setString(3, bill.getPaymentStatus());
             stmt.setTimestamp(4, Timestamp.valueOf(bill.getBillingTime()));
             stmt.executeUpdate();

@@ -134,6 +134,7 @@ public class SmartParkApp {
                     case 2:
                         signUpCLI.showSignUpMenu(true); 
                         break;
+                    // Inside adminMenu -> case 3:
                     case 3:
                         System.out.print("Enter Employee ID to update: ");
                         int empId = getIntInput();
@@ -150,7 +151,9 @@ public class SmartParkApp {
                         
                         System.out.print("New Salary (Enter 0 to keep '₹" + emp.getSalary() + "'): ");
                         double nSal = getDoubleInput();
-                        if (nSal > 0) emp.setSalary(nSal);
+                        
+                        // FIX: Wrap nSal in BigDecimal.valueOf()
+                        if (nSal > 0) emp.setSalary(java.math.BigDecimal.valueOf(nSal));
                         
                         employeeService.updateEmployee(emp);
                         System.out.println("Employee updated successfully.");
@@ -165,7 +168,8 @@ public class SmartParkApp {
                         int pId = getIntInput();
                         System.out.print("Amount to disburse: ₹");
                         double pAmt = getDoubleInput();
-                        salaryService.payEmployee(pId, pAmt, LocalDate.now());
+                        // FIX: Convert double to BigDecimal
+                        salaryService.payEmployee(pId, java.math.BigDecimal.valueOf(pAmt), LocalDate.now());
                         System.out.println("Salary of ₹" + pAmt + " disbursed successfully.");
                         break;
                     case 6:
@@ -177,11 +181,12 @@ public class SmartParkApp {
                         LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
                         
                         List<SalaryDisbursement> salaries = salaryService.getSalaryReport(start, end);
-                        double total = 0;
+                        // FIX: Use BigDecimal for Math
+                        java.math.BigDecimal total = java.math.BigDecimal.ZERO;
                         System.out.println("\n--- Salary Report (" + start.getMonth() + " " + yr + ") ---");
                         for (SalaryDisbursement s : salaries) {
                             System.out.printf("Emp ID: %d | Date: %s | Amount: ₹%.2f%n", s.getEmployeeId(), s.getPaymentDate(), s.getAmount());
-                            total += s.getAmount();
+                            total = total.add(s.getAmount());
                         }
                         System.out.println("Total Salary Paid: ₹" + total);
                         break;
@@ -235,7 +240,8 @@ public class SmartParkApp {
                         double base = getDoubleInput();
                         System.out.print("New Hourly Rate: ₹");
                         double hourly = getDoubleInput();
-                        pricingService.setPricing(type, base, hourly);
+                        // FIX: Convert double to BigDecimal
+                        pricingService.setPricing(type, java.math.BigDecimal.valueOf(base), java.math.BigDecimal.valueOf(hourly));
                         System.out.println("Pricing updated successfully!");
                         break;
                     case 6:

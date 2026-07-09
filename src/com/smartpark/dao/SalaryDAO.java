@@ -3,6 +3,7 @@ package com.smartpark.dao;
 import com.smartpark.models.SalaryDisbursement;
 import com.smartpark.utils.DBConnection;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -14,12 +15,12 @@ import java.util.List;
 
 public class SalaryDAO {
 
-    public void recordSalaryPayment(int employeeId, double amount, LocalDate paymentDate) throws SQLException {
+    public void recordSalaryPayment(int employeeId, BigDecimal amount, LocalDate paymentDate) throws SQLException {
         String query = "INSERT INTO salary_disbursements (employee_id, amount, payment_date) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setInt(1, employeeId);
-            stmt.setDouble(2, amount);
+            stmt.setBigDecimal(2, amount); // BIGDECIMAL
             stmt.setDate(3, Date.valueOf(paymentDate));
             stmt.executeUpdate();
         }
@@ -37,7 +38,7 @@ public class SalaryDAO {
                     disbursements.add(new SalaryDisbursement(
                             rs.getInt("id"),
                             rs.getInt("employee_id"),
-                            rs.getDouble("amount"),
+                            rs.getBigDecimal("amount"), // BIGDECIMAL
                             rs.getDate("payment_date").toLocalDate()
                     ));
                 }

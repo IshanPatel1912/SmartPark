@@ -40,12 +40,22 @@ public class ParkingSessionService {
         this.recentSessions = new Stack<>();
     }
 
+    // BUG FIX #3: Guard against double-queuing
     public void addVehicleToEntryQueue(int vehicleId) {
-        entryQueue.offer(vehicleId);
+        if (!entryQueue.contains(vehicleId)) {
+            entryQueue.offer(vehicleId);
+        } else {
+            System.out.println("Notice: Vehicle is already in the entry queue.");
+        }
     }
 
+    // BUG FIX #3: Guard against double-queuing
     public void addVehicleToExitQueue(int vehicleId) {
-        exitQueue.offer(vehicleId);
+        if (!exitQueue.contains(vehicleId)) {
+            exitQueue.offer(vehicleId);
+        } else {
+            System.out.println("Notice: Vehicle is already in the exit queue.");
+        }
     }
 
     public ParkingSession processNextEntry(int reservationId) throws SQLException, SlotOccupiedException {
@@ -68,7 +78,11 @@ public class ParkingSessionService {
                 }
                 if (LocalDateTime.now().isAfter(res.getExpiryTime())) {
                     reservationDAO.updateReservationStatus(reservationId, "EXPIRED");
-                    throw new SlotOccupiedException("This reservation has expired.");
+                    
+                    // BUG FIX #1: Free up the slot forever locked by expired reservations
+                    slotService.updateSlotStatus(res.getSlotId(), "AVAILABLE");
+                    DBConnection.commitTransaction(); // Save the status update immediately
+                    throw new SlotOccupiedException("This reservation has expired. Slot freed.");
                 }
                 if (res.getVehicleId() != vehicleId) {
                     throw new SlotOccupiedException("Vehicle mismatch! This reservation belongs to another vehicle.");

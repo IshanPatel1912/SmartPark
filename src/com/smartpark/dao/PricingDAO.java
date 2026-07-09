@@ -16,8 +16,8 @@ public class PricingDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, pricing.getVehicleType());
-            stmt.setDouble(2, pricing.getBaseRate());
-            stmt.setDouble(3, pricing.getHourlyRate());
+            stmt.setBigDecimal(2, pricing.getBaseRate()); // BIGDECIMAL
+            stmt.setBigDecimal(3, pricing.getHourlyRate()); // BIGDECIMAL
             stmt.executeUpdate();
         }
     }
@@ -31,7 +31,7 @@ public class PricingDAO {
                 if (rs.next()) {
                     return new Pricing(
                             rs.getInt("id"), rs.getString("vehicle_type"),
-                            rs.getDouble("base_rate"), rs.getDouble("hourly_rate")
+                            rs.getBigDecimal("base_rate"), rs.getBigDecimal("hourly_rate") // BIGDECIMAL
                     );
                 }
             }

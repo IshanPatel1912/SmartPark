@@ -23,7 +23,7 @@ public class EmployeeDAO {
             stmt.setString(3, employee.getContactNumber());
             stmt.setString(4, employee.getEmployeeType());
             stmt.setString(5, employee.getShift());
-            stmt.setDouble(6, employee.getSalary());
+            stmt.setBigDecimal(6, employee.getSalary()); // BIGDECIMAL
             stmt.executeUpdate();
         } catch (SQLIntegrityConstraintViolationException e) {
             throw new DuplicateEntityException("Employee with this contact number already exists.");
@@ -60,7 +60,7 @@ public class EmployeeDAO {
             stmt.setString(1, employee.getName());
             stmt.setString(2, employee.getContactNumber());
             stmt.setString(3, employee.getShift());
-            stmt.setDouble(4, employee.getSalary());
+            stmt.setBigDecimal(4, employee.getSalary()); // BIGDECIMAL
             stmt.setInt(5, employee.getUserId());
             stmt.executeUpdate();
         }
@@ -78,13 +78,13 @@ public class EmployeeDAO {
     private Employee mapResultSetToEmployee(ResultSet rs) throws SQLException {
         String type = rs.getString("employee_type");
         if ("Manager".equalsIgnoreCase(type)) {
-            return new Manager(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getDouble("salary"));
+            return new Manager(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getBigDecimal("salary"));
         } else if ("Security Guard".equalsIgnoreCase(type)) {
-            return new SecurityGuard(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getDouble("salary"));
+            return new SecurityGuard(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getBigDecimal("salary"));
         } else if ("Admin".equalsIgnoreCase(type)) {
-            return new Admin(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getDouble("salary"));
+            return new Admin(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getBigDecimal("salary"));
         } else {
-            return new ParkingOperator(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getDouble("salary"));
+            return new ParkingOperator(rs.getInt("user_id"), rs.getString("name"), rs.getString("contact_number"), rs.getString("shift"), rs.getBigDecimal("salary"));
         }
     }
 }

@@ -3,6 +3,7 @@ package com.smartpark.services;
 import com.smartpark.dao.PricingDAO;
 import com.smartpark.models.Pricing;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 
 public class PricingService {
@@ -13,7 +14,8 @@ public class PricingService {
         this.pricingDAO = new PricingDAO();
     }
 
-    public void setPricing(String vehicleType, double baseRate, double hourlyRate) throws SQLException {
+    // SIGNATURE UPDATED FOR BIGDECIMAL
+    public void setPricing(String vehicleType, BigDecimal baseRate, BigDecimal hourlyRate) throws SQLException {
         Pricing pricing = new Pricing(0, vehicleType, baseRate, hourlyRate);
         pricingDAO.addOrUpdatePricing(pricing);
     }

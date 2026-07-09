@@ -6,6 +6,7 @@ import com.smartpark.models.Bill;
 import com.smartpark.models.ParkingSession;
 import com.smartpark.utils.FileHandler;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +19,7 @@ public class ReportService implements ReportGenerator<Bill> {
         this.reportDAO = new ReportDAO();
     }
 
+    // RESTORED: Customer Parking History
     public List<ParkingSession> getCustomerParkingHistory(int customerId) throws SQLException {
         return reportDAO.getParkingHistoryByCustomer(customerId);
     }
@@ -26,9 +28,21 @@ public class ReportService implements ReportGenerator<Bill> {
         return reportDAO.getPeakHour();
     }
 
-    public void generateRevenueReport(LocalDateTime startDate, LocalDateTime endDate, String fileName) throws Exception {
-        List<Bill> bills = reportDAO.getBillsBetweenDates(startDate, endDate);
-        generateReport(bills, fileName);
+    public void generateRevenueReport(java.time.LocalDateTime startDate, java.time.LocalDateTime endDate, String filePath) throws java.sql.SQLException, java.io.IOException {
+        java.util.List<com.smartpark.models.Bill> bills = reportDAO.getBillsBetweenDates(startDate, endDate);
+        try (java.io.FileWriter writer = new java.io.FileWriter("data/backups/" + filePath)) {
+            writer.write("--- REVENUE REPORT ---\n");
+            writer.write("From: " + startDate + " To: " + endDate + "\n\n");
+            
+            java.math.BigDecimal totalRevenue = java.math.BigDecimal.ZERO;
+            for (com.smartpark.models.Bill bill : bills) {
+                writer.write(String.format("Bill ID: %d | Session ID: %d | Amount: %.2f | Status: %s | Time: %s\n",
+                        bill.getId(), bill.getSessionId(), bill.getAmount(), bill.getPaymentStatus(), bill.getBillingTime()));
+                        
+                totalRevenue = totalRevenue.add(bill.getAmount()); 
+            }
+            writer.write("\nTotal Revenue for Period: Rs." + totalRevenue + "\n");
+        }
     }
 
     public void viewCurrentlyParkedVehicles() throws SQLException {
@@ -41,7 +55,7 @@ public class ReportService implements ReportGenerator<Bill> {
 
     @Override
     public void generateReport(List<Bill> data, String fileName) throws Exception {
-        double totalRevenue = 0.0;
+        BigDecimal totalRevenue = BigDecimal.ZERO;
         int paidCount = 0;
         int pendingCount = 0;
 
@@ -56,7 +70,7 @@ public class ReportService implements ReportGenerator<Bill> {
                          .append(" | Date: ").append(bill.getBillingTime()).append("\n");
             
             if ("PAID".equalsIgnoreCase(bill.getPaymentStatus())) {
-                totalRevenue += bill.getAmount();
+                totalRevenue = totalRevenue.add(bill.getAmount());
                 paidCount++;
             } else {
                 pendingCount++;

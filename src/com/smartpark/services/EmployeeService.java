@@ -7,6 +7,7 @@ import com.smartpark.exceptions.SystemException;
 import com.smartpark.models.*;
 import com.smartpark.utils.DBConnection;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -20,7 +21,8 @@ public class EmployeeService {
         this.employeeDAO = new EmployeeDAO();
     }
 
-    public void registerEmployee(String username, String password, String role, String name, String contactNumber, String shift, double salary) throws DuplicateEntityException, SQLException, SystemException {
+    // SIGNATURE UPDATED FOR BIGDECIMAL
+    public void registerEmployee(String username, String password, String role, String name, String contactNumber, String shift, BigDecimal salary) throws DuplicateEntityException, SQLException, SystemException {
         try {
             DBConnection.beginTransaction(); // Start Atomic Transaction
             

@@ -7,6 +7,7 @@ import com.smartpark.models.Pricing;
 import com.smartpark.models.Receipt;
 import com.smartpark.utils.DBConnection;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -30,9 +31,12 @@ public class BillService {
             throw new SQLException("Pricing details not found for vehicle type: " + vehicleType + ". Please set up pricing first.");
         }
         
-        double amount = pricing.getBaseRate();
+        // BIGDECIMAL MATH FIXES
+        BigDecimal amount = pricing.getBaseRate();
         if (hoursParked > 1) {
-            amount += pricing.getHourlyRate() * (hoursParked - 1);
+            BigDecimal extraHours = BigDecimal.valueOf(hoursParked - 1);
+            BigDecimal extraCost = pricing.getHourlyRate().multiply(extraHours);
+            amount = amount.add(extraCost);
         }
 
         Bill bill = new Bill(0, sessionId, amount, "PENDING", LocalDateTime.now());
@@ -64,7 +68,8 @@ public class BillService {
             stmt.setInt(1, billId);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    Bill bill = new Bill(billId, rs.getInt("session_id"), rs.getDouble("amount"), 
+                    // BIGDECIMAL FIX FOR RECEIPT GENERATION
+                    Bill bill = new Bill(billId, rs.getInt("session_id"), rs.getBigDecimal("amount"), 
                                          rs.getString("payment_status"), rs.getTimestamp("billing_time").toLocalDateTime());
                     
                     ParkingSession session = new ParkingSession(rs.getInt("session_id"), 0, 0, 0, 

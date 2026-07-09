@@ -22,7 +22,6 @@ public class SignUpCLI {
         this.scanner = scanner;
     }
 
-    // AUDIT FIX: Accept a parameter to determine context
     public void showSignUpMenu(boolean isAdminLoggedIn) {
         System.out.println("\n=================================");
         System.out.println("       SMARTPARK REGISTRATION    ");
@@ -69,7 +68,6 @@ public class SignUpCLI {
     }
 
     private void registerEmployee(boolean isAdminLoggedIn) {
-        // AUDIT FIX: First-Admin Bootstrap (Remove Hardcoded Secret)
         boolean isFirstAdmin = checkIsFirstAdmin();
         
         if (!isAdminLoggedIn && !isFirstAdmin) {
@@ -86,8 +84,17 @@ public class SignUpCLI {
         String username = scanner.nextLine();
         System.out.print("Password: ");
         String password = scanner.nextLine();
-        System.out.print("Role (Admin / Manager / Security Guard / Parking Operator): ");
-        String role = scanner.nextLine();
+        
+        // BUG FIX #2: Force Role to Admin during bootstrap
+        String role;
+        if (isFirstAdmin && !isAdminLoggedIn) {
+            role = "Admin";
+            System.out.println("Role automatically set to: Admin");
+        } else {
+            System.out.print("Role (Admin / Manager / Security Guard / Parking Operator): ");
+            role = scanner.nextLine();
+        }
+
         System.out.print("Full Name: ");
         String name = scanner.nextLine();
         System.out.print("Contact Number: ");
@@ -98,7 +105,7 @@ public class SignUpCLI {
         double salary = getDoubleInput();
 
         try {
-            employeeService.registerEmployee(username, password, role, name, contactNumber, shift, salary);
+            employeeService.registerEmployee(username, password, role, name, contactNumber, shift, java.math.BigDecimal.valueOf(salary));
             System.out.println(role + " registered successfully!");
         } catch (Exception e) {
             System.out.println("Registration failed: " + e.getMessage());

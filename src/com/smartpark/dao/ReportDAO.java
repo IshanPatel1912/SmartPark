@@ -8,12 +8,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ReportDAO {
 
+    // RESTORED: Customer Parking History
     public List<ParkingSession> getParkingHistoryByCustomer(int customerId) throws SQLException {
         List<ParkingSession> history = new ArrayList<>();
         String query = "SELECT ps.* FROM parking_sessions ps " +
@@ -44,14 +46,14 @@ public class ReportDAO {
         String query = "SELECT * FROM bills WHERE billing_time >= ? AND billing_time <= ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setTimestamp(1, java.sql.Timestamp.valueOf(startDate));
-            stmt.setTimestamp(2, java.sql.Timestamp.valueOf(endDate));
+            stmt.setTimestamp(1, Timestamp.valueOf(startDate));
+            stmt.setTimestamp(2, Timestamp.valueOf(endDate));
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     bills.add(new Bill(
                             rs.getInt("id"),
                             rs.getInt("session_id"),
-                            rs.getDouble("amount"),
+                            rs.getBigDecimal("amount"), // FIX: Converted to BigDecimal
                             rs.getString("payment_status"),
                             rs.getTimestamp("billing_time").toLocalDateTime()
                     ));
@@ -60,8 +62,6 @@ public class ReportDAO {
         }
         return bills;
     }
-
-    // ... Keep your existing methods ...
 
     public void printCurrentlyParkedVehicles() throws SQLException {
         String query = "SELECT ps.slot_id, s.slot_number, v.license_plate, v.vehicle_type, ps.entry_time " +
